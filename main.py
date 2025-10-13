@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
+import subprocess
+import os
 
 app = FastAPI(title="Server Configuration Test API")
 
@@ -10,7 +12,66 @@ class ServerStatus(BaseModel):
 
 @app.get("/")
 async def read_root():
-    return {"message": "Server is running"}
+    # Get git branch and origin information
+    try:
+        # Change to the application directory to run git commands
+        original_dir = os.getcwd()
+        app_dir = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(app_dir)
+        
+        # Get current git branch
+        git_branch = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], 
+            stderr=subprocess.STDOUT
+        ).decode().strip()
+        
+        # Get current commit hash
+        git_commit = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], 
+            stderr=subprocess.STDOUT
+        ).decode().strip()
+        
+        # Get git origin URL
+        git_origin = subprocess.check_output(
+            ["git", "remote", "get-url", "origin"], 
+            stderr=subprocess.STDOUT
+        ).decode().strip()
+        
+        # Get last commit message
+        git_commit_message = subprocess.check_output(
+            ["git", "log", "-1", "--pretty=%s"], 
+            stderr=subprocess.STDOUT
+        ).decode().strip()
+        
+        # Restore original directory
+        os.chdir(original_dir)
+        
+        return {
+            "message": "Server is running",
+            "git_info": {
+                "branch": git_branch,
+                "commit": git_commit,
+                "origin": git_origin,
+                "last_commit_message": git_commit_message
+            }
+        }
+    except subprocess.CalledProcessError as e:
+        # Restore original directory if error occurs
+        os.chdir(original_dir)
+        return {
+            "message": "Server is running",
+            "git_info": {
+                "error": f"Could not retrieve git information: {str(e)}"
+            }
+        }
+    except FileNotFoundError:
+        # Git command not found
+        return {
+            "message": "Server is running",
+            "git_info": {
+                "error": "Git command not found in environment"
+            }
+        }
 
 @app.get("/test/firewall")
 async def test_firewall():
