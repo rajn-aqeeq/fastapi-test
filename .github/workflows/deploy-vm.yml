@@ -24,6 +24,10 @@ jobs:
         # Port - defaults to 22 if not specified in secrets
         port: ${{ secrets.VM_PORT || 22 }}
         script: |
+          # Update package list and ensure Git is installed
+          sudo apt-get update
+          sudo apt-get install -y git
+          
           # Navigate to application directory
           cd ${{ secrets.VM_APP_PATH || '/home/azureuser/fastapi-test' }}
           
