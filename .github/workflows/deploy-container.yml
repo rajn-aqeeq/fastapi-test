@@ -1,0 +1,68 @@
+name: Create Container Artifact
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  create-artifact:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Extract commit information for release description
+    - name: Get commit information
+      id: commit_info
+      run: |
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "commit_message=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
+        echo "commit_author=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
+
+    # Build the Docker image
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # Build Docker image (without pushing to registry)
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        load: true
+        tags: fastapi-app:${{ steps.commit_info.outputs.sha_short }}
+        build-args: |
+          VERSION=${{ github.sha }}
+
+    # Save Docker image as tar file for artifact storage
+    - name: Save Docker image as tar
+      run: |
+        docker save fastapi-app:${{ steps.commit_info.outputs.sha_short }} -o fastapi-app-${{ steps.commit_info.outputs.sha_short }}.tar
+
+    # Create release and upload artifact
+    - name: Create GitHub Release and Upload Artifact
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ github.run_number }}.${{ steps.commit_info.outputs.sha_short }}
+        name: Release v${{ github.run_number }} - ${{ steps.commit_info.outputs.sha_short }}
+        body: |
+          ## Container Release Information
+          
+          **Commit SHA**: ${{ github.sha }}
+          **Short SHA**: ${{ steps.commit_info.outputs.sha_short }}
+          **Commit Message**: ${{ steps.commit_info.outputs.commit_message }}
+          **Author**: ${{ steps.commit_info.outputs.commit_author }}
+          **Timestamp**: ${{ github.event.push.timestamp || github.event.created_at }}
+          **Branch**: ${{ github.ref_name }}
+          
+          This release contains a Docker image of the FastAPI application built from the above commit.
+          
+          **To use this artifact**:
+          1. Download the `.tar` file
+          2. Load it into Docker: `docker load -i fastapi-app-${{ steps.commit_info.outputs.sha_short }}.tar`
+          3. Run with: `docker run -p <port>:8000 fastapi-app:${{ steps.commit_info.outputs.sha_short }}`
+        files: fastapi-app-${{ steps.commit_info.outputs.sha_short }}.tar
+        draft: false
+        prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}

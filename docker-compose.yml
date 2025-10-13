@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  fastapi-app:
+    build: .
+    container_name: fastapi-app
+    ports:
+      - "${VM_APP_PORT:-8000}:8000"
+    environment:
+      - PORT=8000
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs  # Optional: for log persistence
+    networks:
+      - fastapi-network
+
+networks:
+  fastapi-network:
+    driver: bridge

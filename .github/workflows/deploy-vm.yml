@@ -1,0 +1,50 @@
+name: Deploy to VM via SSH
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy-vm:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Deploy to VM via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        # Only required: host and username
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USERNAME }}
+        # SSH key authentication - required for security
+        key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+        # Port - defaults to 22 if not specified in secrets
+        port: ${{ secrets.VM_PORT || 22 }}
+        script: |
+          # Navigate to application directory
+          cd ${{ secrets.VM_APP_PATH || '/home/azureuser/fastapi-test' }}
+          
+          # Pull latest code
+          git fetch
+          git pull origin main
+          
+          # Install/update dependencies in the virtual environment
+          source venv/bin/activate
+          pip install -r requirements.txt
+          
+          # Restart the systemd service to load new code
+          sudo systemctl stop ${{ secrets.SERVICE_NAME || 'fastapi-test' }}.service || true
+          sudo systemctl start ${{ secrets.SERVICE_NAME || 'fastapi-test' }}.service
+          # OR use restart which combines stop and start
+          # sudo systemctl restart ${{ secrets.SERVICE_NAME || 'fastapi-test' }}.service
+          
+          # Check if the service is running properly
+          sudo systemctl status ${{ secrets.SERVICE_NAME || 'fastapi-test' }}.service
+          
+          # Optional: Wait a few seconds before continuing
+          sleep 5
+          
+          echo "Deployment completed on VM with systemd service restart"
