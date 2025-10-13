@@ -64,24 +64,19 @@ This repository includes GitHub Actions workflows for different deployment scena
 ### 1. Syntax Check (`syntax-check.yml`)
 - Checks Python syntax errors
 - Runs basic code style checking
+- Triggered on pushes to master and dev branches, and pull requests to master
 
-### 2. CI/CD Workflow (`blank.yml`)
-- Tests the application across multiple Python versions
-- Lints the code
-- Deploys to production when tests pass
-
-### 3. VM Deployment (`deploy-vm.yml`)
+### 2. VM Deployment (`deploy-vm.yml`)
 - Deploys to a VM via SSH
 - Executes git pull on the remote server
 - Automatically restarts the systemd service after code updates
+- Triggered on pushes to dev branch
 
-### 4. Container Deployment (`deploy-container.yml`)
+### 3. Container Deployment (`deploy-container.yml`)
 - Builds Docker container images
 - Creates release artifacts with detailed descriptions
 - Stores artifacts in GitHub releases with version tracking
-
-### 5. General Deployment (`deploy.yml`)
-- General deployment workflow for production environments
+- Triggered on pushes to master branch
 
 ## Deployment Options
 
@@ -133,7 +128,7 @@ fastapi-test/
 ├── requirements.txt       # Python dependencies
 ├── nginx.conf             # Nginx configuration template
 ├── .github/
-│   └── workflows/        # GitHub Actions workflows
+│   └── workflows/        # GitHub Actions workflows (syntax-check, deploy-vm, deploy-container)
 └── README.md
 ```
 

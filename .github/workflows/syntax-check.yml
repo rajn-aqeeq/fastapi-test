@@ -2,9 +2,9 @@ name: Syntax Check
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   syntax-check:

@@ -2,7 +2,7 @@ name: Create Container Artifact
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
