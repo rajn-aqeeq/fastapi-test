@@ -144,3 +144,9 @@ All deployment workflows are designed to be secure and maintainable for producti
 ## License
 
 This project is licensed under the MIT License.
+
+## Git Configuration Note
+
+This project has been configured with the following Git user details:
+- Name: rajn-aqeeq
+- Email: rajn@aqeeq.io
