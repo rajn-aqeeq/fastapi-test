@@ -40,7 +40,10 @@ jobs:
           #pip install -r requirements.txt
 
           #paste .env file secrets to local .env
-          echo "${{ secrets.DEV_ENV64_FILE }}" | base64 --decode > .env
+          cat <<'EOF' > .env
+${{ secrets.DEV_ENV_FILE }}
+EOF
+
           
           # Restart the systemd service to load new code
           #sudo systemctl stop ${{ secrets.SERVICE_NAME || 'fastapi-test' }}.service || true
