@@ -41,8 +41,8 @@ jobs:
 
           #paste .env file secrets to local .env
           cat <<'EOF' > .env
-${{ secrets.DEV_ENV_FILE }}
-EOF
+          ${{ secrets.DEV_ENV_FILE }}
+          EOF
 
           
           # Restart the systemd service to load new code
